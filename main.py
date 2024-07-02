@@ -32,32 +32,28 @@ async def check_status():
 
         for member in guild.members:
             if member.bot:
-                continue
+                continue  
+
+            if member.bot or member.status == disnake.Status.offline:
+                    continue  # Ignore les bots et les membres hors ligne
 
             has_custom_status = any(
-                activity.type == disnake.ActivityType.custom and activity.state
-                and '/z7shop' in activity.state
-                for activity in member.activities)
+                activity.type == disnake.ActivityType.custom and activity.state and '/z7shop'  in activity.state
+                for activity in member.activities
+            )
 
             if has_custom_status:
                 if role not in member.roles:
                     await member.add_roles(role)
-                    print(
-                        f'Role added to {member.display_name} in guild {guild.name}'
-                    )
+                    print(f'Role added to {member.display_name} in guild {guild.name}')
             else:
                 if role in member.roles:
                     await member.remove_roles(role)
                     try:
-                        await member.send(
-                            'Vous avez perdu le rôle car vous avez retiré "/z7shop" de votre statut.'
-                        )
+                        await member.send('Vous avez perdu le rôle car vous avez retiré "/z7shop" de votre statut.')
                     except disnake.Forbidden:
                         print(f'Could not send DM to {member.display_name}')
-                    print(
-                        f'Role removed from {member.display_name} in guild {guild.name}'
-                    )
-
+                    print(f'Role removed from {member.display_name} in guild {guild.name}')
 
 app = Flask('')
 
