@@ -81,7 +81,7 @@ async def on_message(message):
     if 'mxtsouko' in message.content.lower():
         embed = disnake.Embed(
             title="My Link",
-            description=f"{reseaux}",
+            description=f"{reseaux1}",
             color=disnake.Color.green()
         )
         embed.set_author(name=message.author.display_name, icon_url=message.author.avatar.url)
@@ -112,7 +112,7 @@ keep_alive()
 bot.run(os.getenv('TOKEN'))
 
 
-reseaux = '''
+reseaux1 = '''
 **Mes Reseaux**:
 
 [**Instagram**](https://www.instagram.com/mxtsouko/)
