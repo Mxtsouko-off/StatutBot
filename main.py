@@ -81,7 +81,15 @@ async def on_message(message):
     if 'mxtsouko' in message.content.lower():
         embed = disnake.Embed(
             title="My Link",
-            description=f"{reseaux1}",
+            description=(
+                "**Mes Reseaux**:\n\n"
+                "[**Instagram**](https://www.instagram.com/mxtsouko/)\n"
+                "[**Snapchat**](https://www.snapchat.com/add/mxtsouko)\n"
+                "[**Github**](https://github.com/mxtsouko-off)\n"
+                "[**TikTok**](https://www.tiktok.com/@mxtsouko)\n\n"
+                "**Me faire un dons**:\n\n"
+                "[**Paypal**](https://www.paypal.com/paypalme/MxtsoukoYtSlmCommand)\n"
+            ),
             color=disnake.Color.green()
         )
         embed.set_author(name=message.author.display_name, icon_url=message.author.avatar.url)
@@ -112,15 +120,4 @@ keep_alive()
 bot.run(os.getenv('TOKEN'))
 
 
-reseaux1 = '''
-**Mes Reseaux**:
 
-[**Instagram**](https://www.instagram.com/mxtsouko/)
-[**Snapchat**](https://www.snapchat.com/add/mxtsouko)
-[**Github**](https://github.com/mxtsouko-off)
-[**TikTok**](https://www.tiktok.com/@mxtsouko?is_from_webapp=1&sender_device=pc)
-
-**Me faire un dons**:
-
-[**Paypal**](https://www.paypal.com/paypalme/MxtsoukoYtSlmCommand)
-'''
