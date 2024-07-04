@@ -53,8 +53,11 @@ async def check_status():
                     print(f'Role removed from {member.display_name} in guild {guild.name}')
 
 
+
 @bot.slash_command(description="Affiche le nombre de messages envoyés par un membre")
 async def count_messages(inter, member: disnake.Member):
+    await inter.response.defer()  # Defer the response immediately to avoid timeout
+
     total_messages = 0
 
     for channel in inter.guild.text_channels:
@@ -70,7 +73,7 @@ async def count_messages(inter, member: disnake.Member):
     embed.add_field(name="Messages", value=str(total_messages), inline=True)
     embed.set_thumbnail(url=member.avatar.url)
     
-    await inter.response.send_message(embed=embed)
+    await inter.edit_original_response(embed=embed) 
 
 
 @bot.event
