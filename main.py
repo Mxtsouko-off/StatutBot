@@ -3,7 +3,6 @@ from disnake.ext import commands, tasks
 import os
 from flask import Flask
 from threading import Thread
-from statbot import reseaux
 
 ROLE_ID = 1257351412401180752
 intents = disnake.Intents.default()
