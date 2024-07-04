@@ -102,7 +102,13 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-
+@bot.slash_command(description="Affiche la photo de profil d'un membre")
+async def pdp(inter, member: disnake.Member):
+    embed = disnake.Embed(title=f"Voici l'avatar de {member.display_name}", color=disnake.Color.blue())
+    embed.set_image(url=member.avatar.url)
+    embed.set_footer(text=f"Demandé par {inter.author.display_name}", icon_url=inter.author.avatar.url)
+    
+    await inter.response.send_message(embed=embed)
 
 
 
