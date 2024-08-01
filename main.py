@@ -16,7 +16,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}.")
-    await bot.change_presence(status=disnake.Status.idle, activity=disnake.Activity(type=disnake.ActivityType.watching, name=f"/z7shop to unlock sponsor roles"))
+    await bot.change_presence(status=disnake.Status.idle, activity=disnake.Activity(type=disnake.ActivityType.watching, name=f"/Taverne Dans le statue pour "))
     check_status.start()
 
 @tasks.loop(seconds=5)
@@ -35,7 +35,7 @@ async def check_status():
                     continue  
 
             has_custom_status = any(
-                activity.type == disnake.ActivityType.custom and activity.state and '/z7shop'  in activity.state
+                activity.type == disnake.ActivityType.custom and activity.state and '/Taverne'  in activity.state
                 for activity in member.activities
             )
 
