@@ -4,19 +4,19 @@ import os
 from flask import Flask
 from threading import Thread
 
-ROLE_ID = 1257351412401180752
+ROLE_ID = os.getenv('ROLE_ID')
 intents = disnake.Intents.default()
 intents.members = True
 intents.presences = True
 intents.guilds = True
 intents.message_content = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="+", intents=intents)
 
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}.")
-    await bot.change_presence(status=disnake.Status.idle, activity=disnake.Activity(type=disnake.ActivityType.watching, name=f"/Taverne Dans le statue pour "))
+    await bot.change_presence(status=disnake.Status.idle, activity=disnake.Activity(type=disnake.ActivityType.watching, name=f"{os.getenv('STATUE')}"))
     check_status.start()
 
 @tasks.loop(seconds=5)
@@ -35,7 +35,7 @@ async def check_status():
                     continue  
 
             has_custom_status = any(
-                activity.type == disnake.ActivityType.custom and activity.state and '/Taverne'  in activity.state
+                activity.type == disnake.ActivityType.custom and activity.state and f'{os.getenv('BIO')}'  in activity.state
                 for activity in member.activities
             )
 
@@ -56,7 +56,7 @@ async def check_status():
 
 @bot.slash_command(description="Affiche le nombre de messages envoyés par un membre")
 async def count_messages(inter, member: disnake.Member):
-    await inter.response.defer()  # Defer the response immediately to avoid timeout
+    await inter.response.defer()  
 
     total_messages = 0
 
@@ -81,7 +81,7 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    if 'mxtsouko' in message.content.lower():
+    if 'mxtsouko' or '@! MXTSOUKO' in message.content.lower():
         embed = disnake.Embed(
             title="My Link",
             description=(
@@ -119,7 +119,7 @@ def main():
     return f"Logged in as {bot.user}."
 
 def run():
-    app.run(host="0.0.0.0", port=8080)
+    app.run(host="0.0.0.0", port=5000)
 
 def keep_alive():
     server = Thread(target=run)
