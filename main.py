@@ -11,12 +11,14 @@ intents.presences = True
 intents.guilds = True
 intents.message_content = True
 
+BIO = os.getenv('BIO')
+STATUE = os.getenv('STATUE')
 bot = commands.Bot(command_prefix="+", intents=intents)
 
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}.")
-    await bot.change_presence(status=disnake.Status.idle, activity=disnake.Activity(type=disnake.ActivityType.watching, name=f"{os.getenv('STATUE')}"))
+    await bot.change_presence(status=disnake.Status.idle, activity=disnake.Activity(type=disnake.ActivityType.watching, name=f"{STATUE}"))
     check_status.start()
 
 @tasks.loop(seconds=5)
@@ -35,7 +37,7 @@ async def check_status():
                     continue  
 
             has_custom_status = any(
-                activity.type == disnake.ActivityType.custom and activity.state and f'{os.getenv('BIO')}'  in activity.state
+                activity.type == disnake.ActivityType.custom and activity.state and f'{BIO}'  in activity.state
                 for activity in member.activities
             )
 
@@ -127,6 +129,3 @@ def keep_alive():
 
 keep_alive()
 bot.run(os.getenv('TOKEN'))
-
-
-
