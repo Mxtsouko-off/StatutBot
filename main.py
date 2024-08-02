@@ -4,7 +4,7 @@ import os
 from flask import Flask
 from threading import Thread
 
-ROLE_ID = os.getenv('ROLE_ID')
+ROLE_ID = 1251588659015192607
 intents = disnake.Intents.default()
 intents.members = True
 intents.presences = True
