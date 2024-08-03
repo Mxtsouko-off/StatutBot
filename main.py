@@ -20,9 +20,10 @@ intents.message_content = True
 CHANNEL_ID = 1269366021576200374
 ANSWER_ROLE_ID = 1269365019208843314
 
+# Charger les questions depuis le fichier JSON
 with open('Json/question.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
-    questions = data["questions"]
+    questions = [item['question'] for item in data]  # Extraire les questions de la liste d'objets
 
 BIO = os.getenv('BIO')
 STATUE = os.getenv('STATUE')
@@ -63,11 +64,11 @@ async def check_status():
             if member.bot:
                 continue  
 
-            if member.bot or member.status == disnake.Status.offline:
-                    continue  
+            if member.status == disnake.Status.offline:
+                continue  
 
             has_custom_status = any(
-                activity.type == disnake.ActivityType.custom and activity.state and f'{BIO}'  in activity.state
+                activity.type == disnake.ActivityType.custom and activity.state and f'{BIO}' in activity.state
                 for activity in member.activities
             )
 
@@ -83,9 +84,6 @@ async def check_status():
                     except disnake.Forbidden:
                         print(f'Could not send DM to {member.display_name}')
                     print(f'Role removed from {member.display_name} in guild {guild.name}')
-
-
-
 
 @bot.slash_command(description="Affiche le nombre de messages envoyés par un membre")
 async def count_messages(inter, member: disnake.Member):
@@ -108,7 +106,6 @@ async def count_messages(inter, member: disnake.Member):
     
     await inter.edit_original_response(embed=embed) 
 
-
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
@@ -123,7 +120,6 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-
 @bot.slash_command(description="Affiche la photo de profil d'un membre")
 async def pdp(inter, member: disnake.Member):
     embed = disnake.Embed(title=f"Voici l'avatar de {member.display_name}", color=disnake.Color.blue())
@@ -131,8 +127,6 @@ async def pdp(inter, member: disnake.Member):
     embed.set_footer(text=f"Demandé par {inter.author.display_name}", icon_url=inter.author.avatar.url)
     
     await inter.response.send_message(embed=embed)
-
-
 
 app = Flask('')
 
@@ -149,6 +143,3 @@ def keep_alive():
 
 keep_alive()
 bot.run(os.getenv('TOKEN'))
-
-
-
