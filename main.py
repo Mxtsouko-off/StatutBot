@@ -1,8 +1,14 @@
 import disnake
 from disnake.ext import commands, tasks
 import os
+import random
+import json
+from dotenv import load_dotenv
 from flask import Flask
 from threading import Thread
+import asyncio
+from datetime import datetime, timedelta
+import re
 
 ROLE_ID = 1251588659015192607
 intents = disnake.Intents.default()
@@ -10,6 +16,13 @@ intents.members = True
 intents.presences = True
 intents.guilds = True
 intents.message_content = True
+
+CHANNEL_ID = 1269366021576200374
+ANSWER_ROLE_ID = 1269365019208843314
+
+with open('Json/question.json', 'r', encoding='utf-8') as f:
+    data = json.load(f)
+    questions = data["questions"]
 
 BIO = os.getenv('BIO')
 STATUE = os.getenv('STATUE')
@@ -20,6 +33,23 @@ async def on_ready():
     print(f"Logged in as {bot.user}.")
     await bot.change_presence(status=disnake.Status.idle, activity=disnake.Activity(type=disnake.ActivityType.watching, name=f"{STATUE}"))
     check_status.start()
+    send_random_question.start()
+
+@tasks.loop(hours=24)
+async def send_random_question():
+    channel = bot.get_channel(CHANNEL_ID)
+    role = disnake.utils.get(channel.guild.roles, id=ROLE_ID)
+    if channel is not None and role is not None:
+        question = random.choice(questions)
+        embed = disnake.Embed(title="Question du jour", description=question, color=0x00ff00)
+        await channel.send(content=role.mention, embed=embed)
+
+async def wait_until_8am():
+    now = datetime.now()
+    future = datetime.combine(now.date(), datetime.min.time()) + timedelta(hours=8)
+    if now >= future:
+        future += timedelta(days=1)
+    await asyncio.sleep((future - now).total_seconds())
 
 @tasks.loop(seconds=5)
 async def check_status():
@@ -56,6 +86,7 @@ async def check_status():
 
 
 
+
 @bot.slash_command(description="Affiche le nombre de messages envoyés par un membre")
 async def count_messages(inter, member: disnake.Member):
     await inter.response.defer()  
@@ -83,26 +114,15 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    if 'mxtsouko' or '@! MXTSOUKO' in message.content.lower():
-        embed = disnake.Embed(
-            title="My Link",
-            description=(
-                "**Mes Reseaux**:\n\n"
-                "[**Instagram**](https://www.instagram.com/mxtsouko/)\n"
-                "[**Snapchat**](https://www.snapchat.com/add/mxtsouko)\n"
-                "[**Github**](https://github.com/mxtsouko-off)\n"
-                "[**TikTok**](https://www.tiktok.com/@mxtsouko)\n\n"
-                "**Me faire un dons**:\n\n"
-                "[**Paypal**](https://www.paypal.com/paypalme/MxtsoukoYtSlmCommand)\n"
-            ),
-            color=disnake.Color.green()
-        )
-        embed.set_author(name=message.author.display_name, icon_url=message.author.avatar.url)
-        embed.set_footer(text=f"Message ID: {message.id}")
-
-        await message.channel.send(embed=embed)
+    if re.search(r'discord\.gg|discord\.com|discord\.me|discord\.app|discord\.io|discord|gg|discord\.gg/|discord\.gg', message.content, re.IGNORECASE):
+            await message.delete()
+            warning_message = await message.channel.send(f"{message.author.mention}, les liens Discord ne sont pas autorisés dans ce channel.")
+            await asyncio.sleep(5)
+            await warning_message.delete()
+            return
 
     await bot.process_commands(message)
+
 
 @bot.slash_command(description="Affiche la photo de profil d'un membre")
 async def pdp(inter, member: disnake.Member):
@@ -129,3 +149,6 @@ def keep_alive():
 
 keep_alive()
 bot.run(os.getenv('TOKEN'))
+
+
+
