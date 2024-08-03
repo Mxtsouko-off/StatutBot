@@ -43,6 +43,7 @@ async def send_random_question():
     if channel is not None and role is not None:
         question = random.choice(questions)
         embed = disnake.Embed(title="Question du jour", description=question, color=0x00ff00)
+        embed.add_field(name='Hesitez pas a repondre dans:', value='https://discord.com/channels/1251476405112537148/1269373203650973726')
         await channel.send(content=role.mention, embed=embed)
 
 async def wait_until_8am():
