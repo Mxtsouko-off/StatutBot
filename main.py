@@ -39,7 +39,7 @@ async def on_ready():
 @tasks.loop(hours=24)
 async def send_random_question():
     channel = bot.get_channel(CHANNEL_ID)
-    role = disnake.utils.get(channel.guild.roles, id=ROLE_ID)
+    role = disnake.utils.get(channel.guild.roles, id=ANSWER_ROLE_ID)
     if channel is not None and role is not None:
         question = random.choice(questions)
         embed = disnake.Embed(title="Question du jour", description=question, color=0x00ff00)
