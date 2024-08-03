@@ -10,6 +10,8 @@ import asyncio
 from datetime import datetime, timedelta
 import re
 
+BUMPING_ROLE_ID = 1269374629047173214
+BUMPING_CHANNEL_ID = 1269355523522953317
 ROLE_ID = 1251588659015192607
 intents = disnake.Intents.default()
 intents.members = True
@@ -35,6 +37,19 @@ async def on_ready():
     await bot.change_presence(status=disnake.Status.idle, activity=disnake.Activity(type=disnake.ActivityType.watching, name=f"{STATUE}"))
     check_status.start()
     send_random_question.start()
+    remind_bumping.start()
+
+@tasks.loop(hours=2)
+async def remind_bumping():
+    channel = bot.get_channel(BUMPING_CHANNEL_ID)
+    role = disnake.utils.get(channel.guild.roles, id=BUMPING_ROLE_ID)
+    if channel is not None and role is not None:
+        embed = disnake.Embed(
+            title="Rappel de Bump",
+            description=f"Il est temps de bump le serveur ! {role.mention}",
+            color=0xFF5733
+        )
+        await channel.send(embed=embed)
 
 @tasks.loop(hours=24)
 async def send_random_question():
