@@ -64,8 +64,7 @@ async def on_ready():
     check_status.start()
     send_random_question.start()
     remind_bumping.start()
-    anime_vote_task.start()
-    report_vote_stats.start() 
+    anime_vote_task.start() 
     country_guess_task.start()
 
 @tasks.loop(hours=2)
@@ -112,14 +111,13 @@ current_country = None
 
 @tasks.loop(hours=2)
 async def country_guess_task():
-    global current_country
     channel = bot.get_channel(int(DEVINE_LE_PAYS_ID))
     country = random.choice(countries)
     image_url = get_country_image(country)
     
     if image_url:
-        current_country = country  # Mettre à jour le pays actuel
-        embed = disnake.Embed(title="Devine le pays", description="Devinez de quel pays il s'agit !")
+        first_letter = country[0].upper()
+        embed = disnake.Embed(title="Devine le pays", description=f"Devinez de quel pays il s'agit !\nPremière lettre : {first_letter}")
         embed.set_image(url=image_url)
         
         view = disnake.ui.View()
@@ -139,7 +137,11 @@ async def on_interaction(interaction: disnake.Interaction):
             await interaction.response.send_message("Vous avez passé cet anime!", ephemeral=True)
         elif custom_id.startswith("guess_"):
             country = custom_id.split("_")[1]
-            # Create a modal to submit the guess
+            bot.guess_data = {
+                "country": country.lower(),
+                "channel_id": interaction.channel.id,
+                "user_id": interaction.user.id
+            }
             modal = disnake.ui.Modal(
                 title="Devinez le pays",
                 components=[
@@ -151,32 +153,21 @@ async def on_interaction(interaction: disnake.Interaction):
                 ]
             )
             await interaction.response.send_modal(modal)
-            
-            # Store the correct answer and channel ID to validate later
-            interaction.client.guess_data = {
-                "country": country,
-                "channel_id": interaction.channel.id
-            }
 
-
-@tasks.loop(minutes=30)
-async def report_vote_stats():
-    global accept_count, pass_count, total_count
+@bot.event
+async def on_modal_submit(modal: disnake.ModalInteraction):
+    user_guess = modal.text_inputs["country_guess_input"].value.strip().lower()
+    correct_country = bot.guess_data["country"]
+    channel_id = bot.guess_data["channel_id"]
+    user_id = bot.guess_data["user_id"]
     
-    if total_count > 0:
-        accept_percentage = (accept_count / total_count) * 100
-        pass_percentage = (pass_count / total_count) * 100
+    if user_guess == correct_country:
+        await modal.response.send_message(f"Félicitations ! Vous avez deviné correctement. Le pays est {correct_country}.", ephemeral=True)
+        channel = bot.get_channel(channel_id)
+        await channel.send(f"Le gagnant est <@{user_id}> ! Nouvelle devinette en cours...")
+        country_guess_task.restart()
     else:
-        accept_percentage = 0
-        pass_percentage = 0
-    
-    channel = bot.get_channel(int(ANIME_VOTE_CHANNEL_ID))
-    embed = disnake.Embed(title="Rapport des Votes d'Anime", color=0x00ff00)
-    embed.add_field(name="Total Votes", value=str(total_count), inline=False)
-    embed.add_field(name="Pourcentage Accepté", value=f"{accept_percentage:.2f}%", inline=True)
-    embed.add_field(name="Pourcentage Passé", value=f"{pass_percentage:.2f}%", inline=True)
-    
-    await channel.send(embed=embed)
+        await modal.response.send_message(f"Oops ! Ce n'est pas correct. Essayez encore !", ephemeral=True)
 
 
 
@@ -184,6 +175,22 @@ async def report_vote_stats():
 @tasks.loop(hours=1)
 async def anime_vote_task():
     channel = bot.get_channel(int(ANIME_VOTE_CHANNEL_ID))
+    
+    if hasattr(anime_vote_task, "accept_count") and hasattr(anime_vote_task, "pass_count"):
+        total_count = anime_vote_task.accept_count + anime_vote_task.pass_count
+        if total_count > 0:
+            accept_percentage = (anime_vote_task.accept_count / total_count) * 100
+            pass_percentage = (anime_vote_task.pass_count / total_count) * 100
+            results_embed = disnake.Embed(
+                title="Résultats du vote anime",
+                description=f"**Accepté**: {accept_percentage:.2f}%\n**Passé**: {pass_percentage:.2f}%",
+                color=0x00ff00
+            )
+            await channel.send(embed=results_embed)
+
+    anime_vote_task.accept_count = 0
+    anime_vote_task.pass_count = 0
+
     anime = random.choice(anime_list)
     anime_name = anime["name"]
     image_url = get_anime_image(anime_name)
