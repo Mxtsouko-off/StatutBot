@@ -97,17 +97,28 @@ def get_country_image(country_name):
     soup = BeautifulSoup(response.text, 'html.parser')
     
     image_elements = soup.find_all("img")
+    
     if len(image_elements) > 1:
-        return image_elements[1]['src']
+        img_tag = image_elements[1]
+        if 'srcset' in img_tag.attrs:
+            srcset = img_tag['srcset']
+            urls = [url.split(' ')[0] for url in srcset.split(',')]
+            return urls[-1] 
+        else:
+            return img_tag['src']
     return None
+
+current_country = None
 
 @tasks.loop(hours=2)
 async def country_guess_task():
+    global current_country
     channel = bot.get_channel(int(DEVINE_LE_PAYS_ID))
     country = random.choice(countries)
     image_url = get_country_image(country)
     
     if image_url:
+        current_country = country  # Mettre à jour le pays actuel
         embed = disnake.Embed(title="Devine le pays", description="Devinez de quel pays il s'agit !")
         embed.set_image(url=image_url)
         
@@ -120,23 +131,32 @@ async def country_guess_task():
 
 @bot.event
 async def on_interaction(interaction: disnake.Interaction):
-    global accept_count, pass_count, total_count
-
     if interaction.type == disnake.InteractionType.component:
-        custom_id = interaction.data.get('custom_id')
+        custom_id = interaction.data.custom_id
         if custom_id == "accept":
-            accept_count += 1
-            total_count += 1
             await interaction.response.send_message("Vous avez accepté cet anime!", ephemeral=True)
         elif custom_id == "pass":
-            pass_count += 1
-            total_count += 1
             await interaction.response.send_message("Vous avez passé cet anime!", ephemeral=True)
-        if custom_id.startswith("guess_"):
+        elif custom_id.startswith("guess_"):
             country = custom_id.split("_")[1]
-            await interaction.response.send_message(f"Félicitations ! Vous avez deviné correctement. Le pays est {country}.", ephemeral=True)
-            await interaction.channel.send("Nouvelle devinette en cours...")
-            country_guess_task.restart()
+            # Create a modal to submit the guess
+            modal = disnake.ui.Modal(
+                title="Devinez le pays",
+                components=[
+                    disnake.ui.TextInput(
+                        label="Quel est le pays?",
+                        placeholder="Entrez votre réponse ici...",
+                        custom_id="country_guess_input"
+                    )
+                ]
+            )
+            await interaction.response.send_modal(modal)
+            
+            # Store the correct answer and channel ID to validate later
+            interaction.client.guess_data = {
+                "country": country,
+                "channel_id": interaction.channel.id
+            }
 
 
 @tasks.loop(minutes=30)
