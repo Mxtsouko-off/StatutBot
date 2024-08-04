@@ -29,6 +29,11 @@ intents.presences = True
 intents.guilds = True
 intents.message_content = True
 
+accept_count = 0
+pass_count = 0
+total_count = 0
+
+
 countries = [
     "France", "Germany", "Italy", "Spain", "Japan", "Brazil", "Canada", "Australia", "China", "India",
     "United States", "United Kingdom", "Russia", "Mexico", "South Korea", "Turkey", "Saudi Arabia", "Argentina",
@@ -132,6 +137,7 @@ async def on_interaction(interaction: disnake.Interaction):
             await interaction.response.send_message(f"Félicitations ! Vous avez deviné correctement. Le pays est {country}.", ephemeral=True)
             await interaction.channel.send("Nouvelle devinette en cours...")
             country_guess_task.restart()
+
 
 @tasks.loop(minutes=30)
 async def report_vote_stats():
