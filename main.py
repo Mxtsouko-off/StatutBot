@@ -60,6 +60,7 @@ async def on_ready():
     send_random_question.start()
     remind_bumping.start()
     anime_vote_task.start()
+    report_vote_stats.start() 
 
 @tasks.loop(hours=2)
 async def remind_bumping():
@@ -113,17 +114,45 @@ async def country_guess_task():
 
 @bot.event
 async def on_interaction(interaction: disnake.Interaction):
+    global accept_count, pass_count, total_count
+
     if interaction.type == disnake.InteractionType.component:
-        custom_id = interaction.data.custom_id
+        custom_id = interaction.data.get('custom_id')
         if custom_id == "accept":
+            accept_count += 1
+            total_count += 1
             await interaction.response.send_message("Vous avez accepté cet anime!", ephemeral=True)
         elif custom_id == "pass":
+            pass_count += 1
+            total_count += 1
             await interaction.response.send_message("Vous avez passé cet anime!", ephemeral=True)
         if custom_id.startswith("guess_"):
             country = custom_id.split("_")[1]
             await interaction.response.send_message(f"Félicitations ! Vous avez deviné correctement. Le pays est {country}.", ephemeral=True)
             await interaction.channel.send("Nouvelle devinette en cours...")
             country_guess_task.restart()
+
+@tasks.loop(minutes=30)
+async def report_vote_stats():
+    global accept_count, pass_count, total_count
+    
+    if total_count > 0:
+        accept_percentage = (accept_count / total_count) * 100
+        pass_percentage = (pass_count / total_count) * 100
+    else:
+        accept_percentage = 0
+        pass_percentage = 0
+    
+    channel = bot.get_channel(int(ANIME_VOTE_CHANNEL_ID))
+    embed = disnake.Embed(title="Rapport des Votes d'Anime", color=0x00ff00)
+    embed.add_field(name="Total Votes", value=str(total_count), inline=False)
+    embed.add_field(name="Pourcentage Accepté", value=f"{accept_percentage:.2f}%", inline=True)
+    embed.add_field(name="Pourcentage Passé", value=f"{pass_percentage:.2f}%", inline=True)
+    
+    await channel.send(embed=embed)
+
+
+
 
 @tasks.loop(hours=1)
 async def anime_vote_task():
