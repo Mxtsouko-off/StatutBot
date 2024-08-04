@@ -10,6 +10,7 @@ disnake = "^2.9.2"
 flask = "^3.0.3"
 python-dotenv = "^1.0.1"
 requests = "^2.32.3"
+beautifulsoup4 = "^4.12.3"
 
 [tool.pyright]
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md
