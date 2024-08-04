@@ -67,11 +67,13 @@ def get_anime_image(anime_name):
     return None
 
 @bot.event
-async def on_button_click(interaction: disnake.MessageInteraction):
-    if interaction.custom_id == "accept":
-        await interaction.response.send_message("Vous avez accepté cet anime!", ephemeral=True)
-    elif interaction.custom_id == "pass":
-        await interaction.response.send_message("Vous avez passé cet anime!", ephemeral=True)
+async def on_interaction(interaction: disnake.Interaction):
+    if interaction.type == disnake.InteractionType.component:
+        custom_id = interaction.data.custom_id
+        if custom_id == "accept":
+            await interaction.response.send_message("Vous avez accepté cet anime!", ephemeral=True)
+        elif custom_id == "pass":
+            await interaction.response.send_message("Vous avez passé cet anime!", ephemeral=True)
 
 @tasks.loop(hours=1)
 async def anime_vote_task():
