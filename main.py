@@ -109,6 +109,7 @@ def get_country_image(country_name):
 
 current_country = None
 
+
 async def country_guess_task():
     channel = bot.get_channel(int(DEVINE_LE_PAYS_ID))
     country = random.choice(countries)
@@ -125,7 +126,7 @@ async def country_guess_task():
         await channel.send(content=f"<@&{PING_DEVINE_LE_PAYS_ID}>", embed=embed, view=view)
     else:
         await channel.send(content="Je n'ai pas pu obtenir une image de pays. Réessayez plus tard.")
-
+        
 @bot.event
 async def on_interaction(interaction: disnake.Interaction):
     if interaction.type == disnake.InteractionType.component:
@@ -134,28 +135,30 @@ async def on_interaction(interaction: disnake.Interaction):
             await interaction.response.send_message("Vous avez accepté cet anime!", ephemeral=True)
         elif custom_id == "pass":
             await interaction.response.send_message("Vous avez passé cet anime!", ephemeral=True)
-    if custom_id.startswith("guess_"):
-                country = custom_id.split("_")[1]
-                bot.guess_data = {
-                    "country": country.lower(),
-                    "channel_id": interaction.channel.id,
-                    "user_id": interaction.user.id
-                }
-                modal = disnake.ui.Modal(
-                    title="Devine le pays",
-                    components=[
-                        disnake.ui.TextInput(
-                            label="Quel est le pays?",
-                            placeholder="Entrez votre réponse ici...",
-                            custom_id="country_guess_input"
-                        )
-                    ]
-                )
-                await interaction.response.send_modal(modal)
+        if custom_id.startswith("guess_"):
+            country = custom_id.split("_")[1]
+            # Stocker les données pour la vérification
+            bot.guess_data = {
+                "country": country.lower(),
+                "channel_id": interaction.channel.id,
+                "user_id": interaction.user.id
+            }
+            # Créer un modal pour la réponse
+            modal = disnake.ui.Modal(
+                title="Devine le pays",
+                components=[
+                    disnake.ui.TextInput(
+                        label="Quel est le pays?",
+                        placeholder="Entrez votre réponse ici...",
+                        custom_id="country_guess_input"
+                    )
+                ]
+            )
+            await interaction.response.send_modal(modal)
 
 @bot.event
 async def on_modal_submit(modal: disnake.ModalInteraction):
-    user_guess = modal.text_inputs["country_guess_input"].value.strip().lower()
+    user_guess = modal.components[0].value.strip().lower()
     correct_country = bot.guess_data["country"]
     channel_id = bot.guess_data["channel_id"]
     user_id = bot.guess_data["user_id"]
