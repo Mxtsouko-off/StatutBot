@@ -10,6 +10,7 @@ import asyncio
 from datetime import datetime, timedelta
 import re
 import requests
+from bs4 import BeautifulSoup
 
 BUMPING_ROLE_ID = 1269374629047173214
 BUMPING_CHANNEL_ID = 1269355523522953317
@@ -18,6 +19,8 @@ CHANNEL_ID = 1269366021576200374
 ANSWER_ROLE_ID = 1269365019208843314
 ANIME_VOTE_CHANNEL_ID = 1269613048944132116
 PING_ANIME_VOTE_ROLE_ID = 1269617965100306494
+DEVINE_LE_PAYS_ID = 1269626318690189363
+PING_DEVINE_LE_PAYS_ID = 1269627556601004104
 
 
 intents = disnake.Intents.default()
@@ -25,6 +28,18 @@ intents.members = True
 intents.presences = True
 intents.guilds = True
 intents.message_content = True
+
+countries = [
+    "France", "Germany", "Italy", "Spain", "Japan", "Brazil", "Canada", "Australia", "China", "India",
+    "United States", "United Kingdom", "Russia", "Mexico", "South Korea", "Turkey", "Saudi Arabia", "Argentina",
+    "South Africa", "Egypt", "Nigeria", "Kenya", "Morocco", "Israel", "Greece", "Portugal", "Sweden", "Norway",
+    "Denmark", "Finland", "Poland", "Netherlands", "Belgium", "Switzerland", "Austria", "Czech Republic",
+    "Hungary", "Romania", "Bulgaria", "Croatia", "Serbia", "Slovakia", "Slovenia", "Lithuania", "Latvia", 
+    "Estonia", "Ukraine", "Belarus", "Georgia", "Armenia", "Azerbaijan", "Kazakhstan", "Uzbekistan", "Pakistan",
+    "Bangladesh", "Sri Lanka", "Nepal", "Bhutan", "Myanmar", "Thailand", "Vietnam", "Cambodia", "Laos", "Malaysia",
+    "Singapore", "Indonesia", "Philippines", "New Zealand"
+]
+
 
 with open("Json/anime.json", "r") as f:
     anime_list = json.load(f)
@@ -66,6 +81,36 @@ def get_anime_image(anime_name):
         return data['data'][0]['images']['jpg']['large_image_url']
     return None
 
+def get_country_image(country_name):
+    search_query = f"{country_name} landmark"
+    search_url = f"https://www.google.com/search?hl=en&tbm=isch&q={search_query}"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
+    
+    response = requests.get(search_url, headers=headers)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    image_elements = soup.find_all("img")
+    if len(image_elements) > 1:
+        return image_elements[1]['src']
+    return None
+
+@tasks.loop(hours=2)
+async def country_guess_task():
+    channel = bot.get_channel(int(DEVINE_LE_PAYS_ID))
+    country = random.choice(countries)
+    image_url = get_country_image(country)
+    
+    if image_url:
+        embed = disnake.Embed(title="Devine le pays", description="Devinez de quel pays il s'agit !")
+        embed.set_image(url=image_url)
+        
+        view = disnake.ui.View()
+        view.add_item(disnake.ui.Button(label="Répondre", style=disnake.ButtonStyle.primary, custom_id=f"guess_{country}"))
+
+        await channel.send(content=f"<@&{PING_DEVINE_LE_PAYS_ID}>", embed=embed, view=view)
+    else:
+        await channel.send(content="Je n'ai pas pu obtenir une image de pays. Réessayez plus tard.")
+
 @bot.event
 async def on_interaction(interaction: disnake.Interaction):
     if interaction.type == disnake.InteractionType.component:
@@ -74,6 +119,11 @@ async def on_interaction(interaction: disnake.Interaction):
             await interaction.response.send_message("Vous avez accepté cet anime!", ephemeral=True)
         elif custom_id == "pass":
             await interaction.response.send_message("Vous avez passé cet anime!", ephemeral=True)
+        if custom_id.startswith("guess_"):
+            country = custom_id.split("_")[1]
+            await interaction.response.send_message(f"Félicitations ! Vous avez deviné correctement. Le pays est {country}.", ephemeral=True)
+            await interaction.channel.send("Nouvelle devinette en cours...")
+            country_guess_task.restart()
 
 @tasks.loop(hours=1)
 async def anime_vote_task():
@@ -94,7 +144,7 @@ async def anime_vote_task():
     else:
         await channel.send(content=f"Je n'ai pas pu trouver une image pour l'anime '{anime_name}'.")
 
-@tasks.loop(hours=24)
+@tasks.loop(hours=8)
 async def send_random_question():
     channel = bot.get_channel(CHANNEL_ID)
     role = disnake.utils.get(channel.guild.roles, id=ANSWER_ROLE_ID)
