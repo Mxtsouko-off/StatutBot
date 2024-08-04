@@ -65,7 +65,7 @@ async def on_ready():
     send_random_question.start()
     remind_bumping.start()
     anime_vote_task.start() 
-    country_guess_task.start()
+    bot.loop.create_task(country_guess_task())
 
 @tasks.loop(hours=2)
 async def remind_bumping():
@@ -109,7 +109,6 @@ def get_country_image(country_name):
 
 current_country = None
 
-@tasks.loop(hours=2)
 async def country_guess_task():
     channel = bot.get_channel(int(DEVINE_LE_PAYS_ID))
     country = random.choice(countries)
@@ -135,24 +134,24 @@ async def on_interaction(interaction: disnake.Interaction):
             await interaction.response.send_message("Vous avez accepté cet anime!", ephemeral=True)
         elif custom_id == "pass":
             await interaction.response.send_message("Vous avez passé cet anime!", ephemeral=True)
-        elif custom_id.startswith("guess_"):
-            country = custom_id.split("_")[1]
-            bot.guess_data = {
-                "country": country.lower(),
-                "channel_id": interaction.channel.id,
-                "user_id": interaction.user.id
-            }
-            modal = disnake.ui.Modal(
-                title="Devinez le pays",
-                components=[
-                    disnake.ui.TextInput(
-                        label="Quel est le pays?",
-                        placeholder="Entrez votre réponse ici...",
-                        custom_id="country_guess_input"
-                    )
-                ]
-            )
-            await interaction.response.send_modal(modal)
+    if custom_id.startswith("guess_"):
+                country = custom_id.split("_")[1]
+                bot.guess_data = {
+                    "country": country.lower(),
+                    "channel_id": interaction.channel.id,
+                    "user_id": interaction.user.id
+                }
+                modal = disnake.ui.Modal(
+                    title="Devine le pays",
+                    components=[
+                        disnake.ui.TextInput(
+                            label="Quel est le pays?",
+                            placeholder="Entrez votre réponse ici...",
+                            custom_id="country_guess_input"
+                        )
+                    ]
+                )
+                await interaction.response.send_modal(modal)
 
 @bot.event
 async def on_modal_submit(modal: disnake.ModalInteraction):
@@ -168,7 +167,6 @@ async def on_modal_submit(modal: disnake.ModalInteraction):
         country_guess_task.restart()
     else:
         await modal.response.send_message(f"Oops ! Ce n'est pas correct. Essayez encore !", ephemeral=True)
-
 
 
 
