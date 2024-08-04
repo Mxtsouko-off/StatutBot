@@ -61,6 +61,7 @@ async def on_ready():
     remind_bumping.start()
     anime_vote_task.start()
     report_vote_stats.start() 
+    country_guess_task.start()
 
 @tasks.loop(hours=2)
 async def remind_bumping():
