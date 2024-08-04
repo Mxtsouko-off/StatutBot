@@ -65,7 +65,6 @@ async def on_ready():
     send_random_question.start()
     remind_bumping.start()
     anime_vote_task.start() 
-    bot.loop.create_task(country_guess_task())
 
 @tasks.loop(hours=2)
 async def remind_bumping():
@@ -87,6 +86,8 @@ def get_anime_image(anime_name):
         return data['data'][0]['images']['jpg']['large_image_url']
     return None
 
+
+
 def get_country_image(country_name):
     search_query = f"{country_name} landmark"
     search_url = f"https://www.google.com/search?hl=en&tbm=isch&q={search_query}"
@@ -96,28 +97,68 @@ def get_country_image(country_name):
     soup = BeautifulSoup(response.text, 'html.parser')
     
     image_elements = soup.find_all("img")
-    
     if len(image_elements) > 1:
         img_tag = image_elements[1]
         if 'srcset' in img_tag.attrs:
             srcset = img_tag['srcset']
             urls = [url.split(' ')[0] for url in srcset.split(',')]
-            return urls[-1] 
+            return urls[-1]  # Retourner la meilleure résolution
         else:
             return img_tag['src']
     return None
 
-current_country = None
+# Créer un modal
+class CountryGuessModal(disnake.ui.Modal):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.add_item(disnake.ui.TextInput(
+            label="Quel est le pays?",
+            placeholder="Entrez votre réponse ici...",
+            custom_id="country_guess_input"
+        ))
 
+    async def callback(self, interaction: disnake.ModalInteraction):
+        user_guess = self.children[0].value.strip().lower()
+        correct_country = bot.guess_data["country"]
+        channel_id = bot.guess_data["channel_id"]
+        user_id = bot.guess_data["user_id"]
+        
+        if user_guess == correct_country:
+            await interaction.response.send_message(f"Félicitations ! Vous avez deviné correctement. Le pays est {correct_country}.", ephemeral=True)
+            channel = bot.get_channel(channel_id)
+            await channel.send(f"Le gagnant est <@{user_id}> ! Nouvelle devinette en cours...")
+            await country_guess_task()  # Redémarrer la devinette
+        else:
+            await interaction.response.send_message(f"Oops ! Ce n'est pas correct. Essayez encore !", ephemeral=True)
 
+# Gérer les interactions avec les boutons
+@bot.event
+async def on_interaction(interaction: disnake.Interaction):
+    if interaction.type == disnake.InteractionType.component:
+        custom_id = interaction.data.custom_id
+        if custom_id.startswith("guess_"):
+            country = custom_id.split("_")[1]
+            bot.guess_data = {
+                "country": country.lower(),
+                "channel_id": interaction.channel.id,
+                "user_id": interaction.user.id
+            }
+            modal = CountryGuessModal(title="Devine le pays")
+            await interaction.response.send_modal(modal)
+    
+    if custom_id == "accept":
+            await interaction.response.send_message("Vous avez accepté cet anime!", ephemeral=True)
+    elif custom_id == "pass":
+            await interaction.response.send_message("Vous avez passé cet anime!", ephemeral=True)
+
+@tasks.loop(hours=2)
 async def country_guess_task():
     channel = bot.get_channel(int(DEVINE_LE_PAYS_ID))
     country = random.choice(countries)
     image_url = get_country_image(country)
     
     if image_url:
-        first_letter = country[0].upper()
-        embed = disnake.Embed(title="Devine le pays", description=f"Devinez de quel pays il s'agit !\nPremière lettre : {first_letter}")
+        embed = disnake.Embed(title="Devine le pays", description=f"Devinez de quel pays il s'agit ! Commencez à deviner par la première lettre : {country[0]}")
         embed.set_image(url=image_url)
         
         view = disnake.ui.View()
@@ -126,50 +167,6 @@ async def country_guess_task():
         await channel.send(content=f"<@&{PING_DEVINE_LE_PAYS_ID}>", embed=embed, view=view)
     else:
         await channel.send(content="Je n'ai pas pu obtenir une image de pays. Réessayez plus tard.")
-        
-@bot.event
-async def on_interaction(interaction: disnake.Interaction):
-    if interaction.type == disnake.InteractionType.component:
-        custom_id = interaction.data.custom_id
-        if custom_id == "accept":
-            await interaction.response.send_message("Vous avez accepté cet anime!", ephemeral=True)
-        elif custom_id == "pass":
-            await interaction.response.send_message("Vous avez passé cet anime!", ephemeral=True)
-        if custom_id.startswith("guess_"):
-            country = custom_id.split("_")[1]
-            # Stocker les données pour la vérification
-            bot.guess_data = {
-                "country": country.lower(),
-                "channel_id": interaction.channel.id,
-                "user_id": interaction.user.id
-            }
-            # Créer un modal pour la réponse
-            modal = disnake.ui.Modal(
-                title="Devine le pays",
-                components=[
-                    disnake.ui.TextInput(
-                        label="Quel est le pays?",
-                        placeholder="Entrez votre réponse ici...",
-                        custom_id="country_guess_input"
-                    )
-                ]
-            )
-            await interaction.response.send_modal(modal)
-
-@bot.event
-async def on_modal_submit(modal: disnake.ModalInteraction):
-    user_guess = modal.components[0].value.strip().lower()
-    correct_country = bot.guess_data["country"]
-    channel_id = bot.guess_data["channel_id"]
-    user_id = bot.guess_data["user_id"]
-    
-    if user_guess == correct_country:
-        await modal.response.send_message(f"Félicitations ! Vous avez deviné correctement. Le pays est {correct_country}.", ephemeral=True)
-        channel = bot.get_channel(channel_id)
-        await channel.send(f"Le gagnant est <@{user_id}> ! Nouvelle devinette en cours...")
-        country_guess_task.restart()
-    else:
-        await modal.response.send_message(f"Oops ! Ce n'est pas correct. Essayez encore !", ephemeral=True)
 
 
 
