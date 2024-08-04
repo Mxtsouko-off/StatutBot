@@ -9,35 +9,42 @@ from threading import Thread
 import asyncio
 from datetime import datetime, timedelta
 import re
+import requests
 
 BUMPING_ROLE_ID = 1269374629047173214
 BUMPING_CHANNEL_ID = 1269355523522953317
 ROLE_ID = 1251588659015192607
+CHANNEL_ID = 1269366021576200374
+ANSWER_ROLE_ID = 1269365019208843314
+ANIME_VOTE_CHANNEL_ID = 1269613048944132116
+PING_ANIME_VOTE_ROLE_ID = 1269617965100306494
+
+
 intents = disnake.Intents.default()
 intents.members = True
 intents.presences = True
 intents.guilds = True
 intents.message_content = True
 
-CHANNEL_ID = 1269366021576200374
-ANSWER_ROLE_ID = 1269365019208843314
+with open("Json/anime.json", "r") as f:
+    anime_list = json.load(f)
 
-# Charger les questions depuis le fichier JSON
 with open('Json/question.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
-    questions = [item['question'] for item in data]  # Extraire les questions de la liste d'objets
+    questions = [item['question'] for item in data]  
 
 BIO = os.getenv('BIO')
 STATUE = os.getenv('STATUE')
-bot = commands.Bot(command_prefix="+", intents=intents)
+bot = commands.Bot(command_prefix="w!", intents=intents)
 
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}.")
-    await bot.change_presence(status=disnake.Status.idle, activity=disnake.Activity(type=disnake.ActivityType.watching, name=f"{STATUE}"))
+    await bot.change_presence(status=disnake.Status.do_not_disturb, activity=disnake.Activity(type=disnake.ActivityType.watching, name=f"{STATUE}"))
     check_status.start()
     send_random_question.start()
     remind_bumping.start()
+    anime_vote_task.start()
 
 @tasks.loop(hours=2)
 async def remind_bumping():
@@ -50,6 +57,40 @@ async def remind_bumping():
             color=0xFF5733
         )
         await channel.send(embed=embed)
+
+def get_anime_image(anime_name):
+    url = f"https://api.jikan.moe/v4/anime?q={anime_name}&limit=1"
+    response = requests.get(url)
+    data = response.json()
+    if data['data']:
+        return data['data'][0]['images']['jpg']['large_image_url']
+    return None
+
+@bot.event
+async def on_button_click(interaction: disnake.MessageInteraction):
+    if interaction.custom_id == "accept":
+        await interaction.response.send_message("Vous avez accepté cet anime!", ephemeral=True)
+    elif interaction.custom_id == "pass":
+        await interaction.response.send_message("Vous avez passé cet anime!", ephemeral=True)
+
+@tasks.loop(hours=1)
+async def anime_vote_task():
+    channel = bot.get_channel(int(ANIME_VOTE_CHANNEL_ID))
+    anime = random.choice(anime_list)
+    anime_name = anime["name"]
+    image_url = get_anime_image(anime_name)
+    
+    if image_url:
+        embed = disnake.Embed(title="Vote pour l'anime", description=f"Proposition d'anime : {anime_name}")
+        embed.set_image(url=image_url)
+        
+        view = disnake.ui.View()
+        view.add_item(disnake.ui.Button(label="Accepter", style=disnake.ButtonStyle.success, custom_id="accept"))
+        view.add_item(disnake.ui.Button(label="Passer", style=disnake.ButtonStyle.danger, custom_id="pass"))
+
+        await channel.send(content=f"<@&{PING_ANIME_VOTE_ROLE_ID}>", embed=embed, view=view)
+    else:
+        await channel.send(content=f"Je n'ai pas pu trouver une image pour l'anime '{anime_name}'.")
 
 @tasks.loop(hours=24)
 async def send_random_question():
@@ -129,7 +170,7 @@ async def on_message(message):
 
     if re.search(r'discord\.gg|discord\.com|discord\.me|discord\.app|discord\.io|discord|gg|discord\.gg/|discord\.gg', message.content, re.IGNORECASE):
             await message.delete()
-            warning_message = await message.channel.send(f"{message.author.mention}, les liens Discord ne sont pas autorisés dans ce channel.")
+            warning_message = await message.channel.send(f"{message.author.mention}, les liens Discord ne sont pas autorisés dans ce serveur. Cordialement équipe La Taverne")
             await asyncio.sleep(5)
             await warning_message.delete()
             return
@@ -143,6 +184,11 @@ async def pdp(inter, member: disnake.Member):
     embed.set_footer(text=f"Demandé par {inter.author.display_name}", icon_url=inter.author.avatar.url)
     
     await inter.response.send_message(embed=embed)
+
+@bot.slash_command(name='anime_vote')
+@commands.has_permissions(administrator=True)
+async def anime_vote(ctx):
+    anime_vote_task.start()
 
 app = Flask('')
 
