@@ -37,9 +37,9 @@ pass_count = 0
 total_count = 0
 
 Wiki = """
-## Commandes de Modération et de Gestion des Niveaux
+** Commandes de Modération et de Gestion des Niveaux
 
-### Commandes Administration
+*** Commandes Administration
 
 - **Réunion :**  
   Pour organisé une réunion, utilisez la commande suivante :  
@@ -57,7 +57,7 @@ Wiki = """
   Pour faire une Promotions staff, utilisez la commande suivante :  
   `/promouvoir @membre:`
 
-### Commandes de Modération
+*** Commandes de Modération
 
 - **Avertissement :**  
   Pour avertir un membre, utilisez la commande suivante :  
@@ -75,7 +75,7 @@ Wiki = """
   Pour expulser un membre, utilisez :  
   `/expulser @membre raison`
 
-### Commandes de Gestion des Niveaux
+*** Commandes de Gestion des Niveaux
 
 - **Ajouter des niveaux :**  
   Pour ajouter des niveaux à un membre, utilisez :  
@@ -93,7 +93,7 @@ Wiki = """
   Pour retirer de l'expérience à un membre, utilisez :  
   `/adminxp retirer @membre experience`
 
-### Sanctions d'Avertissement
+*** Sanctions d'Avertissement
 
 - **1-2 Avertissements :**  
   Aucune sanction.
@@ -315,7 +315,7 @@ async def anime_vote(ctx):
 
 @bot.slash_command(name='wiki', description='Permet de voir les commandes staff')
 @commands.has_role(STAFF_ID)
-async def wiki(ctx, salon: int):
+async def wiki(ctx, salon: disnake.TextChannel):
     channel = bot.get_channel(salon)
     if channel:
         em = disnake.Embed(title='Wiki staff', description=Wiki)
@@ -327,7 +327,7 @@ async def wiki(ctx, salon: int):
         await ctx.response.send_message("Le salon spécifié n'existe pas.", ephemeral=True)
 
 @bot.slash_command(name='bilan', description='Soumettre une plainte envers un staff')
-@commands.has_role(HAUT_STAFF_ID)
+@commands.has_role(HAUT_STAFF_ID, FONDATION_ID)
 async def bilan(ctx, membre: disnake.Member, plainte: str):
     channel = bot.get_channel(BILAN_MSG_ID)
     if channel:
@@ -341,7 +341,6 @@ async def bilan(ctx, membre: disnake.Member, plainte: str):
 @bot.slash_command(name='promouvoir', description='Permet de promouvoir une personne du staff')
 @commands.has_role(FONDATION_ID)
 async def promouvoir(ctx, membre: disnake.Member):
-    # Création du sélecteur de rôles
     options = [
         disnake.SelectOption(label=role_name, value=str(role_id))
         for role_name, role_id in PROMOTION_ROLES.items()
@@ -376,12 +375,11 @@ async def promouvoir(ctx, membre: disnake.Member):
 @commands.has_role(FONDATION_ID)
 async def suspension(ctx, membre: disnake.Member, temps: str):
     try:
-        # Convertir le temps en secondes
         time_mapping = {
-            "s": 1,  # secondes
-            "m": 60, # minutes
-            "h": 3600, # heures
-            "d": 86400 # jours
+            "s": 1,  
+            "m": 60, 
+            "h": 3600, 
+            "d": 86400 
         }
         
         if temps[-1] in time_mapping:
@@ -390,7 +388,6 @@ async def suspension(ctx, membre: disnake.Member, temps: str):
             await ctx.response.send_message("Format de temps invalide. Utilisez `s` pour secondes, `m` pour minutes, `h` pour heures, `d` pour jours.", ephemeral=True)
             return
         
-        # Ajouter le rôle de suspension
         suspension_role = ctx.guild.get_role(SUSPENSION_ID)
         if suspension_role:
             await membre.add_roles(suspension_role)
@@ -398,26 +395,21 @@ async def suspension(ctx, membre: disnake.Member, temps: str):
             await ctx.response.send_message("Rôle de suspension non trouvé.", ephemeral=True)
             return
         
-        # Retirer les rôles de staff
         staff_roles = [ctx.guild.get_role(STAFF_ID), ctx.guild.get_role(HAUT_STAFF_ID)]
         for role in staff_roles:
             if role in membre.roles:
                 await membre.remove_roles(role)
         
-        # Informer le membre
         try:
             await membre.send(f"Vous avez été suspendu pour {temps}. Votre rôle de staff a été temporairement retiré.")
         except disnake.Forbidden:
             await ctx.response.send_message("Impossible d'envoyer un message privé à ce membre.", ephemeral=True)
         
-        # Attendre la fin de la période de suspension
         await asyncio.sleep(duration)
         
-        # Retirer le rôle de suspension et réattribuer les rôles de staff
         if suspension_role in membre.roles:
             await membre.remove_roles(suspension_role)
         
-        # Réattribuer les rôles de staff
         if STAFF_ID in [role.id for role in staff_roles]:
             await membre.add_roles(ctx.guild.get_role(STAFF_ID))
         if HAUT_STAFF_ID in [role.id for role in staff_roles]:
@@ -435,7 +427,7 @@ async def réunion(ctx, date: str, heures: str):
     if channel:
         em = disnake.Embed(title='Annonce Réunions', description=f'Une Réunions aura lieux le {date} a {heures}') 
         em.set_image(url='https://i.ibb.co/zGv8w3k/Taverne-R-cup-r.png')
-        channel.send(embed=em)
+        await channel.send(embed=em)
     await ctx.response.send_message(f"Réunion organisée pour le {date} à {heures}.", ephemeral=True)
 
 
