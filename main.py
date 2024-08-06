@@ -327,7 +327,7 @@ async def wiki(ctx, salon: disnake.TextChannel):
         await ctx.response.send_message("Le salon spécifié n'existe pas.", ephemeral=True)
 
 @bot.slash_command(name='bilan', description='Soumettre une plainte envers un staff')
-@commands.has_role(HAUT_STAFF_ID, FONDATION_ID)
+@commands.has_role(STAFF_ID)
 async def bilan(ctx, membre: disnake.Member, plainte: str):
     channel = bot.get_channel(BILAN_MSG_ID)
     if channel:
