@@ -507,16 +507,29 @@ async def reglement(ctx, channel:disnake.TextChannel):
     else:
         await ctx.response.send_message("Le salon spécifié n'existe pas.", ephemeral=True)
 
-@bot.slash_command(name='informations', description='Permet de voir les information de salon')
+def split_message(message, max_length):
+    parts = []
+    while len(message) > max_length:
+        split_index = message.rfind("\n", 0, max_length)
+        if split_index == -1:
+            split_index = max_length
+        parts.append(message[:split_index])
+        message = message[split_index:]
+    parts.append(message)
+    return parts
+
+@bot.slash_command(name='informations', description='Permet de voir les informations de salon')
 @commands.has_role(FONDATION_ID)
 async def info(ctx):
-    Informations = 1268914798683226173
+    Informations = 1268914798683226173  # Remplacez par votre ID de salon
     channel = bot.get_channel(Informations)
     if channel:
-        em = disnake.Embed(title='Reglement', description=Information)
-        em.set_image(url='https://i.ibb.co/zGv8w3k/Taverne-R-cup-r.png')
-        em.set_footer(text='Équipe de la fondation')
-        await channel.send(embed=em)
+        embed_parts = split_message(Information, 4096)
+        for part in embed_parts:
+            em = disnake.Embed(title='Reglement', description=part)
+            em.set_image(url='https://i.ibb.co/zGv8w3k/Taverne-R-cup-r.png')
+            em.set_footer(text='Équipe de la fondation')
+            await channel.send(embed=em)
         await ctx.response.send_message(f"Message envoyé dans le salon {channel.mention}", ephemeral=True)
     else:
         await ctx.response.send_message("Le salon spécifié n'existe pas.", ephemeral=True)
