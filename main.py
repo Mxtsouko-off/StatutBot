@@ -315,8 +315,9 @@ async def anime_vote(ctx):
 
 @bot.slash_command(name='wiki', description='Permet de voir les commandes staff')
 @commands.has_role(STAFF_ID)
-async def wiki(ctx, salon=None):
-    channel = bot.get_channel(salon)
+async def wiki(ctx, salon):
+    GET_ID = salon
+    channel = bot.get_channel(GET_ID)
     if channel:
         em = disnake.Embed(title='Wiki staff', description=Wiki)
         em.set_image(url='https://i.ibb.co/zGv8w3k/Taverne-R-cup-r.png')
