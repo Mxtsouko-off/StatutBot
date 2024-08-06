@@ -509,7 +509,9 @@ async def reglement(ctx, channel:disnake.TextChannel):
 
 @bot.slash_command(name='informations', description='Permet de voir les information de salon')
 @commands.has_role(FONDATION_ID)
-async def info(ctx, channel:disnake.TextChannel):
+async def info(ctx):
+    Informations = 1268914798683226173
+    channel = bot.get_channel(Informations)
     if channel:
         em = disnake.Embed(title='Reglement', description=Information)
         em.set_image(url='https://i.ibb.co/zGv8w3k/Taverne-R-cup-r.png')
