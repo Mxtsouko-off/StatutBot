@@ -12,6 +12,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
+
 BUMPING_ROLE_ID = 1269374629047173214
 BUMPING_CHANNEL_ID = 1269355523522953317
 ROLE_ID = 1251588659015192607
@@ -35,6 +36,48 @@ intents.message_content = True
 accept_count = 0
 pass_count = 0
 total_count = 0
+
+Reglement = """
+## Règlement de La Taverne
+
+Bienvenue à La Taverne, serveur communautaire ! Faites-vous des amis, entraidez-vous et partagez de bons moments 🥂
+
+### Respect et Courtoisie
+
+Nous sommes un serveur communautaire, donc un certain respect envers chacun est nécessaire pour le bon fonctionnement du serveur. La paix et la bonne humeur règnent ici.
+
+### Langage Inapproprié
+
+Merci de ne pas utiliser de langage faisant référence à la religion, au racisme, au harcèlement ou à toute autre forme de discrimination. Toute forme de discrimination sera sanctionnée. Veuillez également éviter les noms ou photos de profil offensants.
+
+### Publicité, Spam et Contenu NSFW
+
+- **Publicité** : La publicité n'est pas autorisée sur le serveur. Cependant, vous pouvez devenir l'un de nos partenaires ou sponsors dans les salons suivants :
+  - [Devenir Partenaire](https://discord.com/channels/1251476405112537148/1268928500216234054)
+  - [Devenir Sponsors](https://discord.com/channels/1251476405112537148/1268932944664461396)
+
+- **Spam** : Le spam n'est en aucun cas autorisé et sera sanctionné par des avertissements.
+
+- **Contenu NSFW** : Le contenu NSFW (Not Safe For Work) n'est pas autorisé sur le serveur.
+
+### Actes Inappropriés
+
+Les actes suivants seront sanctionnés par un bannissement permanent :
+
+- Toute forme de raid
+- Phishing
+- Doxxing
+- DDoS
+
+Tous ces actes sont complètement interdits selon les [**Conditions d'utilisation de Discord**](https://discord.com/terms).
+
+### Merci de Respecter les ToS de Discord
+
+- [Conditions d'utilisation](https://discord.com/terms)
+- [Politique de confidentialité](https://discord.com/tos)
+- [Directives de la communauté](https://discord.com/guidelines)
+
+"""
 
 Wiki = """
 ** Commandes de Modération et de Gestion des Niveaux
@@ -119,17 +162,6 @@ PROMOTION_ROLES = {
     "Periode Test": 1251840313891491881
 }
 
-countries = [
-    "France", "Germany", "Italy", "Spain", "Japan", "Brazil", "Canada", "Australia", "China", "India",
-    "United States", "United Kingdom", "Russia", "Mexico", "South Korea", "Turkey", "Saudi Arabia", "Argentina",
-    "South Africa", "Egypt", "Nigeria", "Kenya", "Morocco", "Israel", "Greece", "Portugal", "Sweden", "Norway",
-    "Denmark", "Finland", "Poland", "Netherlands", "Belgium", "Switzerland", "Austria", "Czech Republic",
-    "Hungary", "Romania", "Bulgaria", "Croatia", "Serbia", "Slovakia", "Slovenia", "Lithuania", "Latvia", 
-    "Estonia", "Ukraine", "Belarus", "Georgia", "Armenia", "Azerbaijan", "Kazakhstan", "Uzbekistan", "Pakistan",
-    "Bangladesh", "Sri Lanka", "Nepal", "Bhutan", "Myanmar", "Thailand", "Vietnam", "Cambodia", "Laos", "Malaysia",
-    "Singapore", "Indonesia", "Philippines", "New Zealand"
-]
-
 
 with open("Json/anime.json", "r") as f:
     anime_list = json.load(f)
@@ -145,7 +177,7 @@ bot = commands.Bot(command_prefix="w!", intents=intents)
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}.")
-    await bot.change_presence(status=disnake.Status.do_not_disturb, activity=disnake.Activity(type=disnake.ActivityType.watching, name=f"{STATUE}"))
+    await bot.change_presence(status=disnake.Status.online, activity=disnake.Activity(type=disnake.ActivityType.watching, name=f"{STATUE}"))
     check_status.start()
     send_random_question.start()
     remind_bumping.start()
@@ -158,10 +190,10 @@ async def remind_bumping():
     if channel is not None and role is not None:
         embed = disnake.Embed(
             title="Rappel de Bump",
-            description=f"Il est temps de bump le serveur ! {role.mention}",
+            description=f"Il est temps de bump le serveur !",
             color=0xFF5733
         )
-        await channel.send(embed=embed)
+        await channel.send(content=role.mention, embed=embed)
 
 def get_anime_image(anime_name):
     url = f"https://api.jikan.moe/v4/anime?q={anime_name}&limit=1"
@@ -180,7 +212,7 @@ async def on_interaction(interaction: disnake.Interaction):
     elif custom_id == "pass":
             await interaction.response.send_message("Vous avez passé cet anime!", ephemeral=True)
 
-@tasks.loop(hours=1)
+@tasks.loop(hours=4)
 async def anime_vote_task():
     channel = bot.get_channel(int(ANIME_VOTE_CHANNEL_ID))
     
@@ -202,6 +234,8 @@ async def anime_vote_task():
     anime = random.choice(anime_list)
     anime_name = anime["name"]
     image_url = get_anime_image(anime_name)
+
+    role = disnake.utils.get(channel.guild.roles, id=PING_ANIME_VOTE_ROLE_ID)
     
     if image_url:
         embed = disnake.Embed(title="Vote pour l'anime", description=f"Proposition d'anime : {anime_name}")
@@ -211,7 +245,7 @@ async def anime_vote_task():
         view.add_item(disnake.ui.Button(label="Accepter", style=disnake.ButtonStyle.success, custom_id="accept"))
         view.add_item(disnake.ui.Button(label="Passer", style=disnake.ButtonStyle.danger, custom_id="pass"))
 
-        await channel.send(content=f"<@&{PING_ANIME_VOTE_ROLE_ID}>", embed=embed, view=view)
+        await channel.send(content=role.mention, embed=embed, view=view)
     else:
         await channel.send(content=f"Je n'ai pas pu trouver une image pour l'anime '{anime_name}'.")
 
@@ -290,6 +324,11 @@ async def count_messages(inter, member: disnake.Member):
 async def on_message(message):
     if message.author == bot.user:
         return
+    if message.author == FONDATION_ID:
+        return
+    
+    if message.author == STAFF_ID:
+        return
 
     if re.search(r'discord\.gg|discord\.com|discord\.me|discord\.app|discord\.io|discord|gg|discord\.gg/|discord\.gg', message.content, re.IGNORECASE):
             await message.delete()
@@ -311,6 +350,7 @@ async def pdp(inter, member: disnake.Member):
 @bot.slash_command(name='anime_vote')
 @commands.has_permissions(administrator=True)
 async def anime_vote(ctx):
+    anime_vote_task.stop()
     anime_vote_task.start()
 
 @bot.slash_command(name='wiki', description='Permet de voir les commandes staff')
@@ -324,6 +364,20 @@ async def wiki(ctx, channel:disnake.TextChannel):
         await ctx.response.send_message(f"Message envoyé dans le salon {channel.mention}", ephemeral=True)
     else:
         await ctx.response.send_message("Le salon spécifié n'existe pas.", ephemeral=True)
+
+@bot.slash_command(name='reglement', description='Permet de voir le reglement')
+@commands.has_role(FONDATION_ID)
+async def reglement(ctx, channel:disnake.TextChannel):
+    if channel:
+        em = disnake.Embed(title='Reglement', description=Reglement)
+        em.set_image(url='https://i.ibb.co/zGv8w3k/Taverne-R-cup-r.png')
+        em.set_footer(text='Équipe de la fondation')
+        await channel.send(embed=em)
+        await ctx.response.send_message(f"Message envoyé dans le salon {channel.mention}", ephemeral=True)
+    else:
+        await ctx.response.send_message("Le salon spécifié n'existe pas.", ephemeral=True)
+
+
 
 @bot.slash_command(name='bilan', description='Soumettre une plainte envers un staff')
 @commands.has_role(STAFF_ID)
