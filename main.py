@@ -526,7 +526,7 @@ async def info(ctx):
     if channel:
         embed_parts = split_message(Information, 4096)
         for part in embed_parts:
-            em = disnake.Embed(title='Reglement', description=part)
+            em = disnake.Embed(title='Informations', description=part)
             em.set_image(url='https://i.ibb.co/zGv8w3k/Taverne-R-cup-r.png')
             em.set_footer(text='Équipe de la fondation')
             await channel.send(embed=em)
