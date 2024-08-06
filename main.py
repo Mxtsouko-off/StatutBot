@@ -151,6 +151,136 @@ Wiki = """
   Bannissement permanent.
 """
 
+Information = """
+## Information 🌊
+
+- **Ici Vous Pouvez Retrouver Nos Salons**
+
+### Important
+
+- **Recrutement :** 
+  - https://discord.com/channels/1251476405112537148/1268926752734969949
+- **Annoncement :**
+  - https://discord.com/channels/1251476405112537148/1268922208697454592
+- **Ticket :**
+  - https://discord.com/channels/1251476405112537148/1270457969146069124
+- **Roles :**
+  - https://discord.com/channels/1251476405112537148/1268911025277632542
+
+### Actualité
+
+- **Jeux-Gratuit :**
+  - https://discord.com/channels/1251476405112537148/1270457181774286979
+- **Nos-clip :**
+  - https://discord.com/channels/1251476405112537148/1269934338833780778
+- **Nouveauté :**
+  - https://discord.com/channels/1251476405112537148/1270457531541491746
+
+### Communauté
+
+- **Rewards :**
+  - https://discord.com/channels/1251476405112537148/1268927834714542183
+- **Événement :**
+  - https://discord.com/channels/1251476405112537148/1268926227801182280
+- **Giveaway :**
+  - https://discord.com/channels/1251476405112537148/1269349418327609426
+- **Drops :**
+  - https://discord.com/channels/1251476405112537148/1269349465483907174
+- **Vouchs :**
+  - https://discord.com/channels/1251476405112537148/1269349648540106852
+- **General :**
+  - https://discord.com/channels/1251476405112537148/1269069639779090485
+- **Media :**
+  - https://discord.com/channels/1251476405112537148/1269070033829494844
+- **Commandes :**
+  - https://discord.com/channels/1251476405112537148/1269070301556375642
+- **Discussion :**
+  - https://discord.com/channels/1251476405112537148/1269350401963196427
+- **Bump :**
+  - https://discord.com/channels/1251476405112537148/1269355523522953317
+- **Vos-créations :**
+  - https://discord.com/channels/1251476405112537148/1269352364268064829
+- **Vos-music :**
+  - https://discord.com/channels/1251476405112537148/1269351863346663660
+- **Vos-animaux :**
+  - https://discord.com/channels/1251476405112537148/1269352007181795401
+- **Vos-plats :**
+  - https://discord.com/channels/1251476405112537148/1269352135158399047
+- **Level :**
+  - https://discord.com/channels/1251476405112537148/1269351449511465040
+
+### Rencontre
+
+- **Présentation :**
+  - https://discord.com/channels/1251476405112537148/1269071471125205072
+- **Faites-des-rencontres :**
+  - https://discord.com/channels/1251476405112537148/1269072980651016222
+- **Vos-selfies :**
+  - https://discord.com/channels/1251476405112537148/1269350004917669999
+
+### Entraide
+
+- **Entraide-Développement :**
+  - https://discord.com/channels/1251476405112537148/1269353907344379984
+- **Entraide-Informatique :**
+  - https://discord.com/channels/1251476405112537148/1269354088684978330
+- **Entraide-Optimisation :**
+  - https://discord.com/channels/1251476405112537148/1269354264182919178
+- **Recherche-joueurs :**
+  - https://discord.com/channels/1251476405112537148/1269354420957872199
+- **Optimisation :**
+  - https://discord.com/channels/1251476405112537148/1270485617351852202
+
+### Divertissement
+
+- **Questions-du-jour :**
+  - https://discord.com/channels/1251476405112537148/1269366021576200374
+- **Animes-vote :**
+  - https://discord.com/channels/1251476405112537148/1269613048944132116
+- **Réponses :**
+  - https://discord.com/channels/1251476405112537148/1269373203650973726
+
+### Partenariat
+
+- **Devenir-partenaire :**
+  - https://discord.com/channels/1251476405112537148/1268928500216234054
+- **Devenir-sponsors :**
+  - https://discord.com/channels/1251476405112537148/1268932944664461396
+
+### Cinéma
+
+- **Diffusion-info :**
+  - https://discord.com/channels/1251476405112537148/1269933369811271721
+- **Vos-films :**
+  - https://discord.com/channels/1251476405112537148/1269933525654831137
+
+### Espace Privé
+
+- **Informations :**
+  - https://discord.com/channels/1251476405112537148/1269742603126046802
+- **Créer-votre-discussion-privée :**
+  - https://discord.com/channels/1251476405112537148/1269743327285350444
+- **Créer-votre-espace-vocal :**
+  - https://discord.com/channels/1251476405112537148/1269743145239842909
+
+### Services
+
+- **Services-info :**
+  - https://discord.com/channels/1251476405112537148/1269741723718910003
+- **Nouveauté :**
+  - https://discord.com/channels/1251476405112537148/1269741613320638524
+- **Nos-bannières :**
+  - https://discord.com/channels/1251476405112537148/1269741992271675496
+- **Nos-logos :**
+  - https://discord.com/channels/1251476405112537148/1270504376229695488
+- **Nos-miniatures :**
+  - https://discord.com/channels/1251476405112537148/1270504376229695488
+- **Nitro :**
+  - https://discord.com/channels/1251476405112537148/1269742395717849150
+- **Nos-tarifs :**
+  - https://discord.com/channels/1251476405112537148/1269742236502065243
+"""
+
 PROMOTION_ROLES = {
     "Manager": 1251840088032280668,
     "Responsable": 1268647331679440984,
@@ -377,6 +507,17 @@ async def reglement(ctx, channel:disnake.TextChannel):
     else:
         await ctx.response.send_message("Le salon spécifié n'existe pas.", ephemeral=True)
 
+@bot.slash_command(name='informations', description='Permet de voir les information de salon')
+@commands.has_role(FONDATION_ID)
+async def info(ctx, channel:disnake.TextChannel):
+    if channel:
+        em = disnake.Embed(title='Reglement', description=Information)
+        em.set_image(url='https://i.ibb.co/zGv8w3k/Taverne-R-cup-r.png')
+        em.set_footer(text='Équipe de la fondation')
+        await channel.send(embed=em)
+        await ctx.response.send_message(f"Message envoyé dans le salon {channel.mention}", ephemeral=True)
+    else:
+        await ctx.response.send_message("Le salon spécifié n'existe pas.", ephemeral=True)
 
 
 @bot.slash_command(name='bilan', description='Soumettre une plainte envers un staff')
